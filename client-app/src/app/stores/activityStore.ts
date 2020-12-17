@@ -7,10 +7,9 @@ configure({enforceActions: 'always'});
 
 class ActivityStore {
     @observable activityRegistry = new Map();
-    @observable activities: IActivity[] = [];
-    @observable selectedActivity: IActivity | null = null;
+    @observable activity: IActivity | null = null;
     @observable loadingInitial: boolean = false;
-    @observable editMode: boolean = false;
+    @observable formChanges: boolean = false;
     @observable submitting: boolean = false;
     @observable target: string = '';
 
@@ -38,9 +37,21 @@ class ActivityStore {
         }
     };
 
-    @action selectActivity = (id: string) => {
-        this.setSelectedActivity(this.activityRegistry.get(id));
-        this.setEditMode(false);
+    @action loadActivity = async (id: string) => {
+        let activity = this.activityRegistry.get(id);
+        if (activity) {
+            this.activity = activity;
+        }
+        else {
+            this.loadingInitial = true;
+            try {
+                activity = await agent.Activities.details(id);
+                runInAction('getting activity', () => this.loadingInitial = false)
+            } catch (error) {
+                console.log(error);
+                runInAction('Loading Activity Error', () => this.loadingInitial = false)     
+            }
+        }
     }
 
     @action createActivity = async (activity: IActivity) => {
@@ -51,19 +62,12 @@ class ActivityStore {
                 this.activityRegistry.set(activity.id, activity);
             })
             this.setSelectedActivity(activity);
-            this.setEditMode(false);
             this.setSubmitting(false);
         } 
         catch (error) {
             console.log(error);
-            this.setEditMode(false);
             this.setSubmitting(false);
         }
-    }
-
-    @action openCreateForm = () => {
-        this.setSelectedActivity(null);
-        this.setEditMode(true);
     }
 
     @action editActivity = async (activity: IActivity) => {
@@ -73,13 +77,10 @@ class ActivityStore {
             runInAction('edit activity', () => {
                 this.activityRegistry.set(activity.id, activity)
             })
-            this.setSelectedActivity(activity);
-            this.setEditMode(false);
             this.setSubmitting(false);
         } 
         catch (error) {
             console.log(error);
-            this.setEditMode(false);
             this.setSubmitting(false);
         }
     }
@@ -89,7 +90,7 @@ class ActivityStore {
         this.setTarget(event.currentTarget.name)
         try {
             await agent.Activities.delete(id);
-            if (this.selectedActivity?.id === id) {
+            if (this.activity?.id === id) {
                 this.setSelectedActivity(null);
             }
             runInAction('deleting activity in registry', () => {
@@ -104,8 +105,8 @@ class ActivityStore {
     }
 
     @action initializeForm = () => {
-        if (this.selectedActivity) {
-            return this.selectedActivity
+        if (this.activity) {
+            return this.activity
         } else {
             return {
                 id: '',
@@ -119,12 +120,12 @@ class ActivityStore {
         }
     }
 
-    @action setEditMode = (editModeValue: boolean) => {
-        this.editMode = editModeValue;
+    @action setFormChanges = (formChangesValue: boolean) => {
+        this.formChanges = formChangesValue;
     }
 
     @action setSelectedActivity = (activity: IActivity | null) => {
-        this.selectedActivity = activity;
+        this.activity = activity;
     }
 
     @action setSubmitting = (submittingValue: boolean) => {
@@ -134,31 +135,6 @@ class ActivityStore {
     @action setTarget = (targetValue: string) => {
         this.target = targetValue
     }
-
-    // @action handleSubmit = (activity : IActivity) => {
-    //     if (activity.id.length === 0) {
-    //         let newActivity = {...activity, id: uuid()};
-    //         this.createActivity(newActivity);
-    //     } else {
-    //         this.editActivity(activity);
-    //     }
-    // }
-
-  //  @action handleInputChange = (
-  //      event: SyntheticEvent<HTMLInputElement | HTMLTextAreaElement>,
-  //      changeActivity: IActivity) => {
-  //          const {name, value} = event.currentTarget;
-  //          this.ac
-  //          this.selectedActivity = {...changeActivity, [name]: value};
-  //          this.
-  //          const [activity, setActivity] = useState<IActivity>(changeActivity)
-//
-  //          setActivity({...activity, [name]: value})
-  //  }
-
-//    @action deleteActivity = async {id: string} => {
-//        this.submitting
-//    }
 
 }
 
