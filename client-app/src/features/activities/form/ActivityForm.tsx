@@ -1,32 +1,66 @@
-import React, { useContext, FormEvent, useState } from 'react';
+import React, { useContext, FormEvent, useState, useEffect } from 'react';
 import { Segment, Form, Button } from 'semantic-ui-react'
 import {v4 as uuid} from 'uuid'
 import { observer } from 'mobx-react-lite';
 import ActivityStore from '../../../app/stores/activityStore'
 import { IActivity } from '../../../app/models/activity';
+import { RouteComponentProps } from 'react-router-dom';
+import { IActivityIDParam } from '../../../app/models/activityIDParam';
 
-const ActivityForm : React.FC = () => {
+const ActivityForm : React.FC<RouteComponentProps<IActivityIDParam>> = ({ match, history }) => {
     const activityStore = useContext(ActivityStore)
     const { submitting,
+        activity: activityFormState,
+        formChanges,
+        setFormChanges,
+        loadActivity,
         createActivity,
-        editActivity,
+        editActivity, 
         initializeForm,
-        setEditMode } = activityStore
+        setSelectedActivity} = activityStore
 
     const [activity, setActivity] = useState<IActivity>(initializeForm())
+        
+    useEffect(() => {
+        setFormChanges(false);
+        if (match.params.id) {
+            loadActivity(match.params.id).then(() => setActivity(initializeForm()))
+        } else {
+            setSelectedActivity(null);
+            setActivity(initializeForm())
+        }
+        return
+    }, [match.params.id, 
+        activityFormState,
+        activity.id,
+        setFormChanges,
+        loadActivity, 
+        initializeForm, 
+        setSelectedActivity,
+        setActivity ])
 
     const handleSubmit = () => {
-        if (activity.id.length === 0) {
-            let newActivity = {...activity, id: uuid()};
-            createActivity(newActivity);
+        if (formChanges) {
+            if (activity.id.length === 0) {
+                let newActivity = {...activity, id: uuid()};
+                createActivity(newActivity).then(() => history.push(`/activities/${newActivity.id}`));
+            } else {
+                editActivity(activity).then(() => history.push(`/activities/${activity.id}`))
+            }
+            setFormChanges(false);
         } else {
-            editActivity(activity);
+            if (activity.id) {
+                history.push(`/activities/${activity.id}`)
+            } else {
+                history.push('/activities')
+            }
         }
     }
-
+    
     const handleInputChange = (event: FormEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const {name, value} = event.currentTarget;
         setActivity({...activity, [name]: value})
+        setFormChanges(true);
     }
 
     return (
@@ -77,7 +111,7 @@ const ActivityForm : React.FC = () => {
                     content='Submit'
                 />
                 <Button 
-                    onClick={() => setEditMode(false)}
+                    onClick={() => setFormChanges(false)}
                     disabled={submitting}
                     floated='right' 
                     type='submit' 
