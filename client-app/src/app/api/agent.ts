@@ -1,9 +1,29 @@
 import axios, { AxiosResponse } from 'axios';
+import { toast } from 'react-toastify';
+import { history } from '../..';
 import { IActivity } from '../models/activity';
 
 axios.defaults.baseURL = 'http://localhost:5000/api';
 
-const responseBody = (response: AxiosResponse) => response.data
+axios.interceptors.response.use(undefined, error => {
+
+    if (error.message === 'Network Error' && !error.response) {
+        // keep toast replace with page.
+        toast.error('Network Error');
+    }
+
+    const { status } = error.response;
+    if (status === 400 || status === 404) {
+        history.push('/notfound');
+    }
+
+    if (status === 500) {
+        // keep toast replace with page.
+        toast.error('Server error - check the terminal for more info!');
+    }
+})
+
+const responseBody = (response: AxiosResponse) => response.data;
 
 const sleep = (ms: number) => (response: AxiosResponse) =>
     new Promise<AxiosResponse>(resolve => setTimeout(() => resolve(response), ms))
@@ -23,6 +43,7 @@ const Activities = {
     delete: (id: string) => requests.del(`/activities/${id}`) 
 }
 
+// eslint-disable-next-line import/no-anonymous-default-export
 export default {
     Activities
 }

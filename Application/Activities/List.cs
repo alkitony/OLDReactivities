@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Application.Errors;
 using Domain;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +43,9 @@ namespace Application.Activities
                 // }
 
                 var activities = await _context.Activities.ToListAsync(cancellationToken);
+
+                if (activities == null)
+                    throw new RestException(HttpStatusCode.NotFound, new {activity = "No activites exist"});
 
                 return activities;
             }

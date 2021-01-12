@@ -18,8 +18,9 @@ const ActivityDetails: React.FC<RouteComponentProps<IActivityIDParam>> = ({ matc
         loadActivity(match.params.id);
     }, [loadActivity, match.params.id])
 
-    if (loadingInitial || !activity) return <LoadingComponent content='Loading activity ...' />
+    if (loadingInitial ) return <LoadingComponent content='Loading activity ...' />
 
+    if (!activity) return <h1> can't find it</h1>
     return (
         <Grid>
             <Grid.Column width={10}>

@@ -14,6 +14,7 @@ class ActivityStore {
     @observable submitting: boolean = false;
     @observable target: string = '';
 
+
     @computed get activitiesByDate() {
         return this.groupActivitiesByDate(Array.from(this.activityRegistry.values()));
     }
@@ -62,8 +63,8 @@ class ActivityStore {
                     this.loadingInitial = false;
                 })
             } catch (error) {
-                console.log(error);
                 runInAction('Loading Activity Error', () => this.loadingInitial = false)     
+                console.log(error);
             }
         }
     }
