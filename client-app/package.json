@@ -11,7 +11,7 @@
     "@types/react": "^16.9.34",
     "@types/react-dom": "^16.9.7",
     "@types/react-router-dom": "^5.1.6",
-    "axios": "^0.21.1",
+    "axios": "^1.6.0",
     "mobx": "^5.15.4",
     "mobx-react-lite": "^2.0.7",
     "node-sass": "^4.14.1",
